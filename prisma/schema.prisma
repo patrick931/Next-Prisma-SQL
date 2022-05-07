@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  categoryId      Int          @id @default(autoincrement())
+  categoryName    String       @unique @db.VarChar(50)
+  productType     ProductType[]
+  createdAt       DateTime     @default(now())
+}
+
+model ProductType {
+  productTypeId    Int       @id @default(autoincrement())
+  productTypeName  String    @unique @db.VarChar(50)
+  product          Product[]
+  categoryName     Category  @relation(fields: [categoryId], references: [categoryId])
+  categoryId       Int
+  createdAt        DateTime  @default(now())
+}
+
+model Product {
+  productId          Int               @id @default(autoincrement())
+  productSKU         String            @unique @db.VarChar(50)
+  ProductName        String            @unique @db.VarChar(255)
+  buyingPrice        Decimal           @db.Decimal(9,2)
+  sellingPrice       Decimal           @db.Decimal(9,2)
+  productDiscount    Discount?         @relation(fields: [discountId], references: [discountId])
+  discountId         Int?
+  productWeight      Decimal?          @db.Decimal(9,2)
+  imageOneUrl        String?
+  imageTwoUrl        String?
+  imageThreeUrl      String?
+  isActive           Boolean           @default(false)
+  productDescription String?           @db.VarChar(255)
+  productType        ProductType       @relation(fields: [productTypeId], references: [productTypeId]) 
+  productTypeId      Int 
+  taxClass           TaxClass?         @relation(fields: [taxClassId], references: [taxClassId])
+  taxClassId         Int
+  productInventoryId ProductInventory[]
+  unitOfMeasure      UnitOfMeasure     @relation(fields: [unitOfMeasureId], references: [unitOfMeasureId])
+  unitOfMeasureId    Int
+  orderId            OrderItems[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+}
+
+model Discount {
+  discountId           Int           @id @default(autoincrement())
+  dicountName          String        @unique @db.VarChar(50)
+  discountDescription  String?       @db.VarChar(255)
+  dicountPercent       Decimal       @db.Decimal(9,2)
+  isActive             Boolean       @default(false)
+  product              Product[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+}
+model UnitOfMeasureType {
+  unitOfMeasureTypeId    Int             @id @default(autoincrement())
+  unitOfMeasuretypeName  String          @unique @db.VarChar(50)
+  isActive               Boolean         @default(false)
+  unitOfMeasure          UnitOfMeasure[]
+  createdAt              DateTime        @default(now())
+}
+
+model UnitOfMeasure {
+  unitOfMeasureId     Int               @id @default(autoincrement())
+  unitOfMeasureName   String            @unique @db.VarChar(50)
+  isActive            Boolean           @default(false)
+  product             Product[]
+  unitOfMeasureType   UnitOfMeasureType @relation(fields: [unitOfMeasureTypeId], references: [unitOfMeasureTypeId])
+  unitOfMeasureTypeId Int
+  createdAt           DateTime          @default(now())
+}
+
+model ProductInventory {
+  productInventoryId   Int      @id @default(autoincrement())
+  quantity             Decimal  @db.Decimal(10,2)
+  product              Product  @relation(fields: [productId], references: [productId])
+  productId            Int
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model TaxClass {
+  taxClassId    Int      @id @default(autoincrement())
+  taxClassName  String   @unique @db.VarChar(50)
+  taxRate       Decimal  @db.Decimal(2,2)
+  isActive      Boolean  @default(false)
+  product       Product[]
+  createdAt     DateTime @default(now())
+}
+
+model OrderItems {
+  orderId       Int      @id @default(autoincrement())
+  product       Product  @relation(fields: [productId], references: [productId])
+  productId     Int
+  quantity      Decimal  @db.Decimal(10,2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model User {
+  userId         String      @id @default(uuid())
+  firstName      String      @db.VarChar(250)
+  lastName       String      @db.VarChar(250)
+  email          String      @db.VarChar(250) @unique
+  phone          String      @db.VarChar(250) @unique
+  password       String      @db.VarChar(250)
+  emailConfirmed Boolean     @default(false)
+  profile        Profile?
+  isActive       Boolean     @default(true)
+  isAdmin        Boolean     @default(false)
+  registeredAt   DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Profile {
+  profileId  String   @id @default(uuid())
+  bio        String?  @db.VarChar(250)
+  imageUrl   String?  @db.VarChar(250)
+  user       User     @relation(fields: [userId], references: [userId])
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
